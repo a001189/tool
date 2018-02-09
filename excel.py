@@ -14,10 +14,8 @@ class ExcelTools:
     excel 处理工具 二进制xls ,csv格式
     """
 
-    def __init__(self):
-        pass
-
-    def xls_read(self, files):
+    @staticmethod
+    def xls_read(files):
         """
         xls xlsx 格式读取，
         :param files:
@@ -28,7 +26,8 @@ class ExcelTools:
         rows = sheet.get_rows()
         return ([cell.value for cell in row] for row in rows)
 
-    def csv_read(self, files):
+    @staticmethod
+    def csv_read(files):
         """
         csv 读取，已知问题存在 文本格式，gbk，utf 等字节格式；采用try捕获；
         后期在完善其他未知错误或优化该问题
@@ -45,7 +44,8 @@ class ExcelTools:
         rows = csv.reader(file)
         return (x for x in rows)
 
-    def xls_write(self, data_list, files):
+    @staticmethod
+    def xls_write(data_list, files):
         """
         # 传入列表嵌套列表数据
         :param data_list:
@@ -69,7 +69,8 @@ class ExcelTools:
             return 'error:' + str(e)
         return files
 
-    def csv_write(self, data_list, files):
+    @staticmethod
+    def csv_write(data_list, files):
         """
         # 传入列表嵌套列表数据
         :param data_list:
