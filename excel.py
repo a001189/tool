@@ -13,7 +13,6 @@ class ExcelTools:
     """
     excel 处理工具 二进制xls ,csv格式
     """
-    temp = [[1.43, 2, 3, 450, 5], ['a-1', 'b', 'c', 'd'], ['你好', '不好']]
 
     def __init__(self):
         pass
