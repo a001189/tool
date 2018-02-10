@@ -1,4 +1,7 @@
 "# tool" 
+#### python
+* 版本 python3
+* 需包含以下模块 configparser json yaml
 #### excel.py
 1. csv xls xlsx格式excel的读操作， 返回 为嵌套列表的生成器对象
 2. csv xls xlsx格式excel的写操作， 返回 文件名。 传入参数为列表的迭代对象
