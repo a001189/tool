@@ -15,14 +15,33 @@ import yaml
 class ConfigToDict:
     """
     解析配置文件 conf，ini ；yaml；json；
+    category : 指定配置文件的类型，强制使用某种类型解析 conf，ini ；yaml；json;
+    未指定，则根据后缀解析
     备选 hocon xml
     :return:
     """
+    _category = ['ini', 'conf', 'yaml', 'json']
+
     def __init__(self, path=None, category=None):
         self.path = path
         self.category = category
         if not (path and os.path.exists(path)):
             raise InterruptedError('未指定配置文件路径或配置文件不存在')
+        categ = os.path.basename(self.path).split('.')[-1]
+        if self.category and self.category in self._category:
+            fun = self.category + '_explain'
+        else:
+            if categ and categ in self._category:
+                fun = categ + '_explain'
+            else:
+                raise TypeError('未识别配置文类型或配置文件类型指定错误')
+        self.fun = fun
+
+    def __call__(self, *args, **kwargs):
+        return getattr(self, self.fun)()
+
+    def ini_explain(self):
+        return self.conf_explain()
 
     def conf_explain(self):
         """
@@ -55,11 +74,28 @@ class DictToConfig:
     备选 hocon xml
     :return:
     """
-    def __init__(self, path=None, category=None):
+    _category = ['ini', 'conf', 'yaml', 'json']
+
+    def __init__(self, data, path, category=None):
+        self.data = data
         self.path = path
         self.category = category
-        if not path:
+        if not (self.data and isinstance(self.data, dict)):
+            raise TypeError('必须传入字典类型')
+        if not self.path:
             raise InterruptedError('未指定配置文件路径')
+        categ = os.path.basename(self.path).split('.')[-1]
+        if self.category and self.category in self._category:
+            fun = 'to_' + self.category
+        else:
+            if categ and categ in self._category:
+                fun = 'to_' + categ
+            else:
+                raise TypeError('未识别配置文类型或配置文件类型指定错误')
+        self.fun = fun
+
+    def __call__(self, *args, **kwargs):
+        return getattr(self, self.fun)(self.data)
 
     def to_conf(self, data):
         """
@@ -116,15 +152,18 @@ class DictToConfig:
 
 
 if __name__ == '__main__':
-    conf = ConfigToDict('a.ini')
-    print(json.dumps(conf.conf_explain()))
-    js = ConfigToDict('a.json')
-    print(js.json_explain())
-    ym = ConfigToDict('a.yaml')
-    print(ym.yaml_explain())
-    ini = DictToConfig('b.ini')
-    print(ini.to_conf({1: {1: 2, 2: {2: 3}}, }))
-    js2 = DictToConfig('b.json')
-    print(js2.to_json({1: {1: 2, 2: {2: 3}}, }))
-    ym2 = DictToConfig('b.yaml')
-    print((ym2.to_yaml(ym.yaml_explain())))
+    # conf = ConfigToDict('a.ini')
+    # print(json.dumps(conf.conf_explain()))
+    # js = ConfigToDict('a.json')
+    # print(js.json_explain())
+    # ym = ConfigToDict('a.yaml')
+    # print(ym.yaml_explain())
+    # ini = DictToConfig('b.ini')
+    # print(ini.to_conf({1: {1: 2, 2: {2: 3}}, }))
+    # js2 = DictToConfig('b.json')
+    # print(js2.to_json({1: {1: 2, 2: {2: 3}}, }))
+    # ym2 = DictToConfig('b.yaml')
+    # print((ym2.to_yaml(ym.yaml_explain())))
+    print(dict(ConfigToDict('a.yaml')()))
+    print(ConfigToDict('b.yaml')())
+    print(DictToConfig({1: {1: 2, 2: {2: 3}}, }, 'c.yaml')())
