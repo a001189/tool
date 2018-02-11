@@ -38,11 +38,6 @@ def filezip(path: str='输入文件', file_path: str='压缩结果文件'):
         zp.write(path, filename)
         print('add %s' % path)
     zp.close()
-    print(zpfile)
-
-    import conf
-    conf.DictToConfig(zpfile, 'zp.yaml')()
-
     return file_path
 
 

@@ -6,64 +6,105 @@
 @File    : email.py
 @Software: PyCharm
 """
-#!/usr/bin/env python
-# -*-coding:utf-8-*-
-"""
-author : shenshuo
-date   : 2018年2月6日16:28:03
-role   : 发送邮件
-"""
 import smtplib
 import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.header import Header
 
 
 class Mail:
-    def __init__(self, mail_host="smtp.163.com", mail_user="xz_ops_mail", mail_pass="shenshuo1",
-                 mail_postfix="163.com"):
-        self.mail_host = mail_host    # 使用的邮箱的smtp服务器地址，这里是163的smtp地址
-        self.__mail_user = mail_user  # 用户名
-        self.__mail_pass = mail_pass  # 密码
-        self.mail_postfix = mail_postfix  # 邮箱的后缀，网易就是163.com
+    """
+    邮件发送类
+    """
+    def __init__(self, server='smtp.163.com', port=25, user='18516157608@163.com', password='123123qwe', ssl=False):
+        self._server = server
+        self._port = port
+        self._user = user
+        self._password = password
+        self._ssl = ssl
 
-    def send_mail(self, to_list, header, sub, content, subtype='plain', att='none'):
+    def server(self):
+        server = smtplib.SMTP()
+        server.connect(self._server, self._port)  # 连接服务器
+        server.login(self._user, self._password)  # 登录操作
+        return server
+
+    def send(self, to_list, from_man, subject, content, attach_file=None, subtype='plain'):
         """
+
         :param to_list:  收件人以半角逗号分隔 必填
-        :param header:   发件名，必填
-        :param sub:      标题 必填。
-        :param content:  发件内容 必填。
-        :param subtype:  发件格式 默认plain，可选 html格式
-        :param att:      附件 只支持单附件，选填
+        :param from_man:  发件人别名，必填
+        :param subject: 主题
+        :param content: 正文
+        :param subtype: 编码类型，plain -->文本 html -->网页格式
+        :param attach_file: 附件，多个附件以，；分割
+        :return: 发送成功，则为真
         """
-        me = header + "<" + self.__mail_user + "@" + self.mail_postfix + ">"
         msg = MIMEMultipart()
-        msg['Subject'] = sub  ## 标题
-        msg['From'] = me  ## 发件人
+        msg['Subject'] = subject  # 标题
+        fr = from_man + "<" + self._user + ">"
+        print(fr, type(fr))
+        msg['From'] = fr  # 发件人
         msg['To'] = to_list  # 收件人，必须是一个字符串
-
         # 邮件正文内容
         msg.attach(MIMEText(content, subtype, 'utf-8'))
-        ### 附件
-        if att != 'none':
-            if not os.path.isfile(att):
-                raise FileNotFoundError('{0} file does not exist'.format(att))
+        if attach_file:
+            path_list = self.file_to_list(attach_file)
+            print(path_list)
+            dir_list = [x for x in path_list if os.path.isdir(x)]
+            file_list = [x for x in path_list if not os.path.isdir(x)]
+            for file in file_list:
+                msg.attach(self._attach_file(file))
+            if len(dir_list) > 0:
+                try:
+                    import filezip
+                    for dirs in dir_list:
+                        dir_name = os.path.basename(dirs.rstrip('/'))
+                        dir_name_zip = dir_name + '.zip'
+                        filezip.filezip(dirs, dir_name_zip)
+                        msg.attach(self._attach_file(dir_name_zip))
+                        os.remove(dir_name_zip)
+                except Exception as e:
+                    print(e, '文件压缩模块未加载,请下载同步下filezip.py，将跳过目录')
 
-            dirname, filename = os.path.split(att)
-            # 构造附件1，传送当前目录下的 test.txt 文件
-            att1 = MIMEText(open(att, 'rb').read(), 'base64', 'utf-8')
-            att1["Content-Type"] = 'application/octet-stream'
-            # 这里的filename可以任意写，写什么名字，邮件中显示什么名字
-            att1["Content-Disposition"] = 'attachment; filename="{0}"'.format(filename)
-            msg.attach(att1)
-
+        # 发送
         try:
             server = smtplib.SMTP()
-            server.connect(self.mail_host)  # 连接服务器
-            server.login(self.__mail_user, self.__mail_pass)  # 登录操作
-            server.sendmail(me, to_list.split(','), msg.as_string())
+            server.connect(self._server, self._port)  # 连接服务器
+            server.login(self._user, self._password)  # 登录操作
+            server.sendmail(fr, to_list.split(','), msg.as_string())
             server.close()
             return True
         except Exception as e:
-            print(str(e))
-            return False
+            print(e)
+
+    @staticmethod
+    def _attach_file(path):
+        if not os.path.isfile(path):
+            raise FileNotFoundError('{0} file does not exist'.format(path))
+        filename = os.path.basename(path)
+        # 构造附件1，传送当前目录下的 test.txt 文件
+        att = MIMEText(open(path, 'rb').read(), 'base64', 'utf-8')
+        att["Content-Type"] = 'application/octet-stream'
+        # 这里的filename可以任意写，写什么名字，邮件中显示什么名字
+        att["Content-Disposition"] = 'attachment; filename="{0}"'.format(filename)
+        return att
+
+    @staticmethod
+    def file_to_list(path):
+        """
+        根据路径中，；分割多个路径；文件夹则压缩文件夹
+        :param path:
+        :return:
+        """
+        if path:
+            path_list = path.replace(';', ',').split(',')
+            return [x.strip() for x in path_list]
+
+
+if __name__ == '__main__':
+    a = Mail()
+    s = a.send('201519832@qq.com', '你哈', '主题', 'content', 'a.ini,b.ini,log,' + r'D:\IDM')
+    if s:
+        print('发送成功')
