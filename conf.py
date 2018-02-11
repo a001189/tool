@@ -145,7 +145,7 @@ class DictToConfig:
                """
         if isinstance(data, dict):
             with open(self.path, 'w') as f:
-                yaml.dump(data, f)
+                yaml.dump(data, f, default_flow_style=False)
             return self.path
         else:
             raise TypeError('输入数据必须为字典')
@@ -166,4 +166,4 @@ if __name__ == '__main__':
     # print((ym2.to_yaml(ym.yaml_explain())))
     print(dict(ConfigToDict('a.yaml')()))
     print(ConfigToDict('b.yaml')())
-    print(DictToConfig({1: {1: 2, 2: {2: 3}}, }, 'c.yaml')())
+    print(DictToConfig({'age': 37, 'children': [{'age': 15, 'name': 'Jimmy Smith'}, {'age1': 12, 'name1': 'Jenny Smith'}], 'name': 'Tom Smith', 'spouse': {'age': 25, 'name': 'Jane Smith'}}, 'c.yaml')())
