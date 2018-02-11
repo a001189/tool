@@ -45,14 +45,12 @@ class Mail:
         msg = MIMEMultipart()
         msg['Subject'] = subject  # 标题
         fr = from_man + "<" + self._user + ">"
-        print(fr, type(fr))
         msg['From'] = fr  # 发件人
         msg['To'] = to_list  # 收件人，必须是一个字符串
         # 邮件正文内容
         msg.attach(MIMEText(content, subtype, 'utf-8'))
         if attach_file:
             path_list = self.file_to_list(attach_file)
-            print(path_list)
             dir_list = [x for x in path_list if os.path.isdir(x)]
             file_list = [x for x in path_list if not os.path.isdir(x)]
             for file in file_list:
@@ -119,7 +117,7 @@ class Mail:
                         zpfile[ph] = os.path.basename(ph)
                     else:
                         # 变目录的绝对路径为相对路径
-                        parent_path = os.path.split(ph.rstrip('/'))[0]
+                        parent_path = os.path.split(ph.rstrip('/'))[0].replace('\\', '/')
                         for file in self.dir_list(ph):
                             zpfile[file] = file.replace(parent_path, '')
         for path, filename in zpfile.items():
@@ -147,8 +145,10 @@ class Mail:
             return file_list
         return listdir(path_dir)
 
+
 if __name__ == '__main__':
     a = Mail()
-    s = a.send('201519832@qq.com', '你哈', '主题', '不错呀。小伙子', 'a.ini,b.ini,log,' + r'D:\IDM')
+    s = a.send('201519832@qq.com,479100885@qq.com', '你哈', '主题', '不错呀。小伙子', 'a.ini,log' +
+               r',D:\raw\[全栈开发 ]Vue+Django REST framework 打造生鲜电商项目\t1nkuy')
     if s:
         print('发送成功')

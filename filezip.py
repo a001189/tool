@@ -31,7 +31,7 @@ def filezip(path: str='输入文件', file_path: str='压缩结果文件'):
                     zpfile[ph] = os.path.basename(ph)
                 else:
                     # 变目录的绝对路径为相对路径
-                    parent_path = os.path.split(ph.rstrip('/'))[0]
+                    parent_path = os.path.split(ph.rstrip('/'))[0].replace('\\', '/')
                     for file in dir_list(ph):
                         zpfile[file] = file.replace(parent_path, '')
     for path, filename in zpfile.items():
