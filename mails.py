@@ -11,19 +11,21 @@ import os
 import zipfile
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.header import Header
+import socket
+import ssl
 
 
 class Mail:
     """
     邮件发送类
     """
-    def __init__(self, server='smtp.163.com', port=25, user='18516157608@163.com', password='123123qwe', ssl=False):
+    def __init__(self, server='smtp.163.com', port=465, user='18516157608@163.com', password='123123qwe', ssl_v=True):
         self._server = server
         self._port = port
         self._user = user
         self._password = password
-        self._ssl = ssl
+        self._ssl = ssl_v
+        self.port_check(server, port)
 
     def server(self):
         server = smtplib.SMTP()
@@ -64,14 +66,17 @@ class Mail:
 
         # 发送
         try:
-            server = smtplib.SMTP()
+            server = smtplib.SMTP_SSL() if self._ssl else smtplib.SMTP()
             server.connect(self._server, self._port)  # 连接服务器
             server.login(self._user, self._password)  # 登录操作
             server.sendmail(fr, to_list.split(','), msg.as_string())
             server.close()
             return True
+        except ssl.SSLError:
+            print('请使用ssl加密模式')
         except Exception as e:
             print(e)
+
 
     @staticmethod
     def _attach_file(path):
@@ -144,6 +149,20 @@ class Mail:
                     listdir(os.path.join(ph[0], dirs).replace('\\', '/'))
             return file_list
         return listdir(path_dir)
+
+    @staticmethod
+    def port_check(ip, port=None):
+        if ip and ':' in ip:
+            ip, port = ip.strip().split(':')
+        sk = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # noinspection PyBroadException
+        try:
+            sk.settimeout(1)
+            sk.connect((ip, int(port)))
+            return True
+        except Exception:
+            raise InterruptedError('端口无法连接，请更换端口尝试')
+        sk.close()
 
 
 if __name__ == '__main__':
