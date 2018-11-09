@@ -65,3 +65,4 @@ if __name__ == "__main__":
     text = list_get_index(sys.argv, 4, 'keepalived master change text')
     attach =list_get_index(sys.argv, 5, None)
     sendMail(from_, to_, subject, text, attach)
+    print("sended")
