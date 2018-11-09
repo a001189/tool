@@ -1,0 +1,67 @@
+#!/usr/bin/env python3.6
+# -*- coding: utf-8 -*-
+# @Time    : 2018/11/9 13:11
+# @Author  : ysj
+
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#python2
+
+import smtplib,os,sys
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
+from email import encoders
+from email.mime.base import MIMEBase
+from email.utils import parseaddr, formataddr
+# 格式化邮件地址
+def formatAddr(s):
+    name, addr = parseaddr(s)
+    return formataddr((Header(name, 'utf-8').encode(), addr))
+
+
+def sendMail(from_, to_, subject, body, attachment=None):
+    smtp_server = 'smtp.163.com'
+    from_mail = '18516157608@163.com'
+    mail_pass = '123QAZ'
+    to_mail = to_
+    # 构造一个MIMEMultipart对象代表邮件本身
+    msg = MIMEMultipart()
+    # Header对中文进行转码
+    msg['From'] = formatAddr('<%s>' % from_).encode()
+    msg['To'] = to_
+    msg['Subject'] = Header(subject, 'utf-8').encode()
+    # plain代表纯文本
+    msg.attach(MIMEText(body, 'plain', 'utf-8'))
+    # 二进制方式模式文件
+    if attachment:
+        with open(attachment, 'rb') as f:
+            # MIMEBase表示附件的对象
+            mime = MIMEBase('text', 'txt', filename=attachment)
+            # filename是显示附件名字
+            mime.add_header('Content-Disposition', 'attachment', filename=attachment)
+            # 获取附件内容
+            mime.set_payload(f.read())
+            encoders.encode_base64(mime)
+            # 作为附件添加到邮件
+            msg.attach(mime)
+    server = smtplib.SMTP(smtp_server, 25)
+    server.login(from_mail, mail_pass)
+    server.sendmail(from_mail, to_mail, msg.as_string())  # as_string()把MIMEText对象变成str
+    server.quit()
+
+def list_get_index(list_, index, default=""):
+    try:
+        rs = list_[index]
+    except IndexError:
+        rs = default
+    return rs
+
+if __name__ == "__main__":
+    import sys
+    from_ = list_get_index(sys.argv, 1, '18516157608@163.com')
+    to_ = list_get_index(sys.argv, 2, '479100885@qq.com')
+    subject = list_get_index(sys.argv, 3, 'keepalived master change info')
+    text = list_get_index(sys.argv, 4, 'keepalived master change text')
+    attach =list_get_index(sys.argv, 5, None)
+    sendMail(from_, to_, subject, text, attach)
